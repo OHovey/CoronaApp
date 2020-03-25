@@ -95,7 +95,7 @@ export default function CountryDetail() {
                 padding: 0
             }}
         >
-            <h3 style = {{ color: 'whitesmoke', margin: 0 }} className = "bg-dark" onClick = {(e) => { history.goBack() }}><span style = {{ backgroundColor: 'whitemoke', borderRadius: 10 }}>{"\u2190"}</span> back</h3>
+            <h3 style = {{ color: 'whitesmoke', margin: 0, paddingLeft: 32 }} className = "bg-dark" onClick = {(e) => { history.goBack() }}><span style = {{ backgroundColor: 'whitemoke', borderRadius: 10 }}>{"\u2190"}</span> back</h3>
             
             <hr style = {{ margin: 0, backgroundColor: '#636363' }}></hr>
             <div className = 'container-fluid align-items-center bg-dark' style = {{ padding: 0 }}>

@@ -1,13 +1,13 @@
 import pandas as pd
 import csv
 import datetime
-from datetime import date
+from datetime import date, timedelta
 import requests
 import sqlite3
 
 def pullDownData():
-    current_date = date.today()
-    request_url = f'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-23.xlsx'
+    current_date = date.today() - timedelta(days = 1)
+    request_url = f'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{current_date}.xlsx'
 
     r = requests.get(request_url, allow_redirects = True)
     open('covid.xls', 'wb').write(r.content)
@@ -172,6 +172,19 @@ def alter_data(filename):
         writefile.close() 
 
     readfile.close()
+
+
+def main():
+    try:
+        pullDownData()
+        delete_all_from_tables() 
+        convert_to_csv('covid.xls')
+        alter_data('covid.csv')
+        alter_day_data('covid.csv')
+        write_csv_data_to_database('altered_covid.csv') 
+        write_day_csv_data_to_database('day_data.csv')
+    except: 
+        pass
 
 
 if __name__ == '__main__':
