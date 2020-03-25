@@ -29,17 +29,29 @@ const App = () => (
     >
       <div className = 'container-fluid bg-dark'>
         <header className = 'bg-dark align-items-center'>
-          <h1 
-            style = {{
-              fontWeight: 0.5,
-              paddingBottom: 40,
-              margin: 'auto',
-              color: '#FF4136'
-            }}
-            className = 'bg-dark'
-          >
-            Don't Panic!
-          </h1>
+          <div className = "row">
+            <div className = "col-sm-4">
+
+            </div>
+            <div className = "col-sm-4">
+              <h1 
+                style = {{
+                  fontWeight: 0.5,
+                  fontSize: '4.0em',
+                  paddingBottom: 40,
+                  marginLeft: 100,
+                  margin: 'auto',
+                  color: '#FF4136'
+                }}
+                className = 'bg-dark text-center'
+              >
+                Don't Panic!
+              </h1>
+            </div>
+            <div className = "col-sm-4">
+
+            </div>
+          </div>
         </header>
       </div>
       <Router>

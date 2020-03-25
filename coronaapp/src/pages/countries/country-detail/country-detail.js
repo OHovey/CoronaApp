@@ -45,7 +45,7 @@ export default function CountryDetail() {
     else if (data.country.totalCases < 1000) {
         AdditionYSpace = 250
     } else if (data.country.totalCases > 1000) {
-        AdditionYSpace = 2000
+        AdditionYSpace = 500
     } else if (data.country.totalCases > 10000) {
         AdditionYSpace = 3000
     }
@@ -54,13 +54,14 @@ export default function CountryDetail() {
 
     // console.log('dataindex: ' + JSON.stringify(data.country.history.edges[-1].node.newCases))
 
-    if (data.country.history.edges[0].node.newCases > data.country.history.edges[data.country.history.edges.length - 1].node.newCases) {
-        case_data = case_data.reverse()
-        console.log('yes it is!!!!!!!!!!!!!!!!!!')
-    } 
-    // console.log('try this: ' + data.country.history.edges[0].newCases)
-    // console.log('differece: ' + Math.abs(Date(data.country.history.edges[1].date).getTime() - Date(data.country.history.edges[0].data).getTime()))
+    try {
+        if (data.country.history.edges[0].node.newCases > data.country.history.edges[data.country.history.edges.length - 1].node.newCases) {
+            case_data = case_data.reverse()
+            console.log('yes it is!!!!!!!!!!!!!!!!!!')
+        } 
+    } catch (TypeError) {
 
+    }
 
     const arrSumCases = arr => arr.reduce((a,b) => a + b.node.newCases, 0)
     const arrSumDeaths = arr => arr.reduce((total, d) => total + d.node.newDeaths, 0)
@@ -134,7 +135,6 @@ export default function CountryDetail() {
                         <Tooltip />
                         <Label value = "Total COVID-19 infection cases and deaths over time" position='insideTopLeft' />
                         <Line
-                            key="uv"
                             type="monotone"
                             dataKey="Total Cases"
                             stroke="#ff5252"
@@ -161,7 +161,7 @@ export default function CountryDetail() {
                         <YAxis />
                         <Tooltip label = "date" />
                         <Legend />
-                        <Bar dataKey="New Cases" fill="#ff5252" />
+                        <Bar dataKey="New Cases" fill="#ff5252" barSize = {[{'width': 40}]} />
                         <Bar dataKey="New Deaths" fill="#000000" />
                     </BarChart>
                 </ResponsiveContainer>
