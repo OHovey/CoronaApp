@@ -27,6 +27,24 @@ const GET_COUNTRY = gql`
     }
 `;
 
+
+function returnUniqueArray(array) {
+    const result = [] 
+    const map = new Map() 
+    for (const item of array) {
+        if (!map.has(item.date)) {
+            map.set(item.date, true)
+            result.push({
+                date: item.date,
+                'New Cases': item['New Cases'],
+                'New Deaths': item['New Deaths']
+            })
+        }
+    }
+    return result
+}
+
+
 export default function CountryDetail() {
     let history = useHistory()
 
@@ -50,29 +68,32 @@ export default function CountryDetail() {
         AdditionYSpace = 3000
     }
     
+    
     let case_data = data.country.history.edges
-
-    // console.log('dataindex: ' + JSON.stringify(data.country.history.edges[-1].node.newCases))
-
+    console.log(case_data)
     try {
         if (data.country.history.edges[0].node.newCases > data.country.history.edges[data.country.history.edges.length - 1].node.newCases) {
             case_data = case_data.reverse()
-            console.log('yes it is!!!!!!!!!!!!!!!!!!')
         } 
     } catch (TypeError) {
 
     }
-
+    
+    // ------------------------------------------------------------------------
+    // sort data iinto new, more accessible arrays sorted by total accumulated 
+    // death and case data
     const arrSumCases = arr => arr.reduce((a,b) => a + b.node.newCases, 0)
     const arrSumDeaths = arr => arr.reduce((total, d) => total + d.node.newDeaths, 0)
     let accumulated_case_data = Array.from(case_data, (case_object, i) => {    
-        console.log('case_data: ' + case_object)
+        // console.log('case_data: ' + case_object)
         let dayDataPoint = {} 
         dayDataPoint['date'] = case_object.node.date
         dayDataPoint['Total Cases'] = arrSumCases(case_data.slice(0, i))
         dayDataPoint['Total Deaths'] = arrSumDeaths(case_data.slice(0, i))
         return dayDataPoint
     })
+    // accumulated_case_data = returnUniqueArray(accumulated_case_data) 
+
     let accumulated_death_data = Array.from(case_data, (case_object, i) => {
         let dayDataPoint = {} 
         dayDataPoint['date'] = case_object.node.date 
@@ -80,13 +101,30 @@ export default function CountryDetail() {
         dayDataPoint['New Deaths'] = case_object.node.newDeaths 
         return dayDataPoint
     })
-
-    // accumulated_case_data.forEach(c => {
-    //     console.log(Date(c.date))
-    // })
+    if (new Set(accumulated_case_data.map(item => item.date)).length > accumulated_case_data.length) {
+        accumulated_case_data = accumulated_case_data.slice(0, (accumulated_case_data.length / 2))
+        accumulated_death_data = accumulated_death_data.slice(0, (accumulated_death_data.length / 2))
+    }
+    // accumulated_death_data = returnUniqueArray(accumulated_death_data)
+    // console.log('accumulated death data: ' + JSON.stringify(accumulated_death_data))
 
     accumulated_case_data = accumulated_case_data.sort((a, b) => Date(b.date) - Date(a.date))
-    // console.log('accumulated_case_data: ' + JSON.stringify(accumulated_case_data))
+    console.log('accumulated case data: ' + JSON.stringify(accumulated_case_data))
+    // -------------------------------------
+    // split data by the first case measured
+    let sliceIndex = 0
+    for (let i = 0; i < accumulated_case_data.length; i++) {
+        console.log('accumulated: ' + accumulated_case_data[i])
+        if (accumulated_case_data[i]['Total Cases'] > 0) {
+            sliceIndex = i 
+            break 
+        }
+    }
+    console.log('sliceIndex: ' + sliceIndex)
+    accumulated_case_data = accumulated_case_data.slice(sliceIndex - 1, accumulated_case_data.length - 1) 
+    accumulated_death_data = accumulated_death_data.slice(sliceIndex - 1, accumulated_death_data.length - 1)
+
+
 
     return (
         <div className = 'container-fluid'
@@ -101,7 +139,7 @@ export default function CountryDetail() {
             <div className = 'container-fluid align-items-center bg-dark' style = {{ padding: 0 }}>
                 <div className = "row bg-dark">
                     <div className = "col-md-12 align-items-center">
-                        <h1 className = "mx-auto" style = {{ paddingLeft: 30, fontSize: '3.5em', color: 'whitesmoke' }} >{data.country.name}</h1>
+                        <h1 className = "mx-auto" style = {{ paddingLeft: 30, fontSize: '3.5em', color: 'whitesmoke' }} >{data.country.name.split('_').join(' ')}</h1>
                     </div>
                 </div>
                 <hr style = {{ backgroundColor: "#636363", margin: 0 }}/>
@@ -120,7 +158,7 @@ export default function CountryDetail() {
                 <hr style = {{ backgroundColor: "#636363", margin: 0 }}/>
             </div>
             <div className = "container">
-                <h3 style = {{ margin: 40, borderBottomStyle: 'solid', borderBottomColor: 'black' }}>Total Cases and Deaths over time</h3>
+                <h3 style = {{ margin: 40, borderBottomStyle: 'solid', borderBottomColor: 'black' }}>Total Cases and Deaths over time - from earliest case</h3>
                 <br/>
                 <ResponsiveContainer width = "100%" height = {400}>
                     <LineChart data={accumulated_case_data}>
@@ -153,7 +191,7 @@ export default function CountryDetail() {
                 <br/>
                 <hr/>
                 <br/>
-                <h3 style = {{ margin: 40, borderBottomStyle: 'solid', borderBottomColor: 'black' }}>Day to Day Statistics</h3>
+                <h3 style = {{ margin: 40, borderBottomStyle: 'solid', borderBottomColor: 'black' }}>Day to Day Statistics - from earliest case</h3>
                 <ResponsiveContainer width = "100%" height = {400}>
                     <BarChart width={730} height={250} data={accumulated_death_data}>
                         <CartesianGrid strokeDasharray="3 3" />

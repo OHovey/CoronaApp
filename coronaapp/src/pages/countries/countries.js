@@ -47,13 +47,13 @@ export default function Countries() {
 
     if (loading) return <p>Loading...</p>
 
-    data.allCountries.edges.map(country => {
-        try {
-            console.log(country.node.history.edges[0]['node'])
-        } catch (TypeError) {
+    // data.allCountries.edges.map(country => {
+    //     try {
+    //         console.log(country.node.history.edges[0]['node'])
+    //     } catch (TypeError) {
             
-        }
-    })
+    //     }
+    // })
 
     data.allCountries.edges.sort(sortCountriesByInfectedCount)
 
@@ -102,7 +102,7 @@ export default function Countries() {
                                     return (
                                         <tr key = {index} onClick = {(e) => {passCountryToDetailPage(country.node.id)}}>
                                             <th scope = 'row'>{index + 1}</th> 
-                                            <td scope = 'row'>{country.node.name}</td> 
+                                            <td scope = 'row'>{country.node.name.split('_').join(' ')}</td> 
                                             <td scope = 'row' style = {{ color: '#9e0000' }}>{country.node.totalCases}</td> 
                                             <td scope = 'row'>{country.node.totalDeaths}</td>
                                             <td scope = 'row' style = {{ color: '#615c00' }}>{country.node.history.edges[0].node.newCases}</td>

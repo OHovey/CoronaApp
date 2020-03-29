@@ -28,3 +28,8 @@ class DayData(Base):
     new_cases = Column(Integer) 
     new_deaths = Column(Integer)
 
+
+class DatabaseUpdate(Base):
+    __tablename__ = 'db_updates' 
+    id = Column(Integer, primary_key = True)  
+    date = Column(Date)
