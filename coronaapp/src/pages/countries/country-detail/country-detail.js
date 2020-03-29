@@ -101,7 +101,11 @@ export default function CountryDetail() {
         dayDataPoint['New Deaths'] = case_object.node.newDeaths 
         return dayDataPoint
     })
-    if (new Set(accumulated_case_data.map(item => item.date)).length > accumulated_case_data.length) {
+
+    let set_length = new Set(accumulated_case_data.map(item => item.date)).size
+    console.log(set_length + ' ' + accumulated_case_data.length)
+
+    if (new Set(accumulated_case_data.map(item => item.date)).size < accumulated_case_data.length) {
         accumulated_case_data = accumulated_case_data.slice(0, (accumulated_case_data.length / 2))
         accumulated_death_data = accumulated_death_data.slice(0, (accumulated_death_data.length / 2))
     }
@@ -121,8 +125,8 @@ export default function CountryDetail() {
         }
     }
     console.log('sliceIndex: ' + sliceIndex)
-    accumulated_case_data = accumulated_case_data.slice(sliceIndex - 1, accumulated_case_data.length - 1) 
-    accumulated_death_data = accumulated_death_data.slice(sliceIndex - 1, accumulated_death_data.length - 1)
+    accumulated_case_data = accumulated_case_data.slice(sliceIndex - 1, accumulated_case_data.length) 
+    accumulated_death_data = accumulated_death_data.slice(sliceIndex - 1, accumulated_death_data.length)
 
 
 

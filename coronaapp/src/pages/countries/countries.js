@@ -1,4 +1,4 @@
-import React from 'react' 
+import React, { useState } from 'react' 
 import { gql } from 'apollo-boost' 
 import { useQuery } from '@apollo/react-hooks' 
 import { useHistory } from "react-router-dom"
@@ -30,6 +30,8 @@ const GET_COUNTRIES = gql`
     }
 `;
 
+const searchCountries = (arr, text) => arr.filter(item => item.node.name.toLowerCase().includes(text))
+
 function sortCountriesByInfectedCount(a, b) {
     if (a.node.totalCases < b.node.totalCases) return 1 
     if (b.node.totalCases < a.node.totalCases) return -1 
@@ -40,20 +42,13 @@ function sortCountriesByInfectedCount(a, b) {
 export default function Countries() {
     
     const { loading, error, data } = useQuery(GET_COUNTRIES)
+    const [displayData,  setDisplayData] = useState([])
 
     let history = useHistory()
 
     // console.log('data: ' + data)
 
     if (loading) return <p>Loading...</p>
-
-    // data.allCountries.edges.map(country => {
-    //     try {
-    //         console.log(country.node.history.edges[0]['node'])
-    //     } catch (TypeError) {
-            
-    //     }
-    // })
 
     data.allCountries.edges.sort(sortCountriesByInfectedCount)
 
@@ -67,6 +62,24 @@ export default function Countries() {
     function passCountryToDetailPage(countryId) {
         history.push('/country/' + countryId)
     }
+
+    let dataToDisplay = {}
+    if (displayData.length == 0) {
+        // console.log('yep its null')
+        dataToDisplay = data.allCountries.edges
+    } else {
+        dataToDisplay = displayData
+    }
+
+    // console.log('dataToDisplay: ' + dataToDisplay)
+
+    function alterDisplayData(text) {
+        let comparisonData = data.allCountries.edges
+        let filteredCountries = searchCountries(comparisonData, text) 
+        console.log('filtered_countries: ' + filteredCountries)
+        setDisplayData(filteredCountries)
+    }
+
 
     return (
         <div className = 'container-fluid' style = {{ backgroundColor: '#bfbfbf' }}>
@@ -82,7 +95,13 @@ export default function Countries() {
                 <div className = "col-md-3 mx-auto">
                 </div>
             </div>
-            <div className = "container">    
+            <div className = "container">  
+            <div class="md-form mt-0 input-group" style = {{ padding: 40 }}>
+                <div className = "input-group-prepend">
+                    <span className = "input-group-text">Search: </span>
+                </div>
+                <input onChange = {(e) => { alterDisplayData(e.target.value) }} class="form-control" type="text" placeholder="..." aria-label="Search"/>
+            </div> 
                 <div className = 'container-fluid'>
                     <table className = "table table-hover">
                         <thead>
@@ -96,7 +115,7 @@ export default function Countries() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.allCountries.edges.map((country, index) => {
+                            {dataToDisplay.map((country, index) => {
 
                                 try {
                                     return (

@@ -4,7 +4,7 @@ import { useQuery } from '@apollo/react-hooks'
 
 const GET_DATABASE_UDPATE = gql`
 {
-    allUpdates(first: 1) {
+    allUpdates(last: 1) {
         edges {
             node {
                 date
