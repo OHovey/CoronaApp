@@ -20,9 +20,12 @@ export default function DatabaseDetail() {
 
     if (loading) return <p>last update...</p> 
 
+    let date_data = data.allUpdates.edges[0].node.date.split('-')
+    let new_date = date_data[2] + '/' + date_data[1] + '/' + date_data[0]
+
     return (
-        <p className = "text-right" style = {{ color: '#ababab' }}>
-            last update: {data.allUpdates.edges[0].node.date}
+        <p className = "text-right" style = {{ color: '#945050' }}>
+            last updated on {new_date}
         </p>
     )
 }

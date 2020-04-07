@@ -10,50 +10,6 @@ from schema import schema
 
 from update import main as main_update
 
-# -------------------------------------------------
-
-# setup logging configuration 
-# import logging
-# from logging.config import dictConfig 
-# from logging.handlers import SMTPHandler 
-
-# dictConfig({
-#     'version': 1,
-#     'formatters': {
-#             'detailed': {
-#                 'class': 'logging.Formatter',
-#                 'format': '%(asctime)s %(name)-15s %(levelname)-8s %(processName)-10s %(message)s'
-#             },
-#             'simple': {
-#                 'class': 'logging.Formatter',
-#                 'format': '%(name)-15s %(levelname)-8s %(processName)-10s %(message)s'
-#             }
-#         },
-#     'handlers': {
-#         'file': {
-#             'class': 'logging.FileHandler',
-#             'filename': 'logging/systemLog.log',
-#             'mode': 'w',
-#             'formatter': 'detailed'
-#         },
-#         'errors': {
-#             'class': 'logging.FileHandler',
-#             'filename': 'logging/error.log',
-#             'mode': 'w',
-#             'formatter': 'detailed',
-#             'level': 'ERROR'
-#         }
-#     }
-# })
-
-# mail_handler = SMTPHandler(
-#     mailhost='127.0.0.1',
-#     fromaddr='corona_app_error_log@example.com',
-#     toaddrs=['olliehovey@gmail.com'],
-#     subject='Application Error'
-# )
-# mail_handler.setLevel(logging.ERROR) 
-
 # ------------------------------
 
 app = Flask(__name__) 

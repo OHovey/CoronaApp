@@ -4,13 +4,86 @@ import datetime
 from datetime import date, timedelta
 import requests
 import sqlite3
+import os
+from operator import itemgetter
 
 from promise import Promise 
 from promise.dataloader import DataLoader
 
+
+file_headers = {
+    0: {'headers': ['ï»¿Province/State',
+        'Country/Region',
+        'Last Update',
+        'Confirmed',
+        'Deaths',
+        'Recovered'], 'index_array': { 'country': 1, 'province': 0, 'confirmed': 3, 'deaths': 4, 'recovered': 5 }},
+    1: {'headers': ['Province/State',
+        'Country/Region',
+        'Last Update',
+        'Confirmed',
+        'Deaths',
+        'Recovered'], 'index_array': { 'country': 1, 'province': 0, 'confirmed': 3, 'deaths': 4, 'recovered': 5 }},
+    2: {'headers': ['Province/State',
+        'Country/Region',
+        'Last Update',
+        'Confirmed',
+        'Deaths',
+        'Recovered',
+        'Latitude',
+        'Longitude'], 'index_array': { 'country': 1, 'province': 0, 'confirmed': 3, 'deaths': 4, 'recovered': 5 }},
+    3: {'headers': ['ï»¿Province/State',
+        'Country/Region',
+        'Last Update',
+        'Confirmed',
+        'Deaths',
+        'Recovered',
+        'Latitude',
+        'Longitude'], 'index_array': { 'country': 1, 'province': 0, 'confirmed': 3, 'deaths': 4, 'recovered': 5 }},
+    4: {'headers': ['Province/State',
+        'Country/Region',
+        'Last Update',
+        'Confirmed',
+        'Deaths',
+        'Recovered',
+        'Latitude',
+        'Longitude'], 'index_array': { 'country': 1, 'province': 0, 'confirmed': 3, 'deaths': 4, 'recovered': 5 }},
+    5: {'headers': ['ï»¿FIPS',
+        'Admin2',
+        'Province_State',
+        'Country_Region',
+        'Last_Update',
+        'Lat',
+        'Long_',
+        'Confirmed',
+        'Deaths',
+        'Recovered',
+        'Active',
+        'Combined_Key'], 'index_array': { 'country': 3, 'province': 2, 'confirmed': 7, 'deaths': 8, 'recovered': 9 }},
+    6: {'headers': ['FIPS',
+        'Admin2',
+        'Province_State',
+        'Country_Region',
+        'Last_Update',
+        'Lat',
+        'Long_',
+        'Confirmed',
+        'Deaths',
+        'Recovered',
+        'Active',
+        'Combined_Key'], 'index_array': { 'country': 3, 'province': 2, 'last_update': 4, 'confirmed': 7, 'deaths': 8, 'recovered': 9 }}
+}
+
+
+
+
+
+
+
+
 def pullDownData():
     def fetch_it(days: int):
-        current_date = date.today() - timedelta(days = 1)
+        current_date = date.today() - timedelta(days = days)
         request_url = f'https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-{current_date}.xlsx'
         r = requests.get(request_url, allow_redirects = True)
         open('covid.xls', 'wb').write(r.content)
@@ -21,6 +94,10 @@ def pullDownData():
         # if todays' data doesn't exist, fetch yesterdays' data instead.
         fetch_it(1)
 # https://www.ecdc.europa.eu/sites/default/files/documents/COVID-19-geographic-disbtribution-worldwide-2020-03-23.xlsx
+
+
+
+
 
 def convert_to_csv(filename: str):
     excel_data = pd.read_excel(filename, 'COVID-19-geographic-disbtributi', index_col = None) 
@@ -182,6 +259,7 @@ def alter_data(filename):
 
     readfile.close()
 
+
 def get_country_objects(filename: str):
     from models import engine, db_session, Country 
     with open(filename, 'r') as readfile:
@@ -250,28 +328,26 @@ def get_day_data_objects(filename):
         return day_data_list
 
 
-class Loader:
-    def __init__(self):
-        from models import db_session 
-        self.session = db_session
-        self.country_loader = self.CountryLoader()
-        self.day_data_loader = self.DayDataLoader() 
+# class Loader:
+#     def __init__(self):
+#         from models import db_session 
+#         self.session = db_session
+#         self.country_loader = self.CountryLoader()
+#         self.day_data_loader = self.DayDataLoader() 
     
-    class CountryLoader(DataLoader):
-        def batch_load_fn(self, keys, filename):
-            from models import db_session
-            country_data = get_country_objects(filename)
-            return Promise.resolve([self.session.add(country) for country in country_data])
+#     class CountryLoader(DataLoader):
+#         def batch_load_fn(self, keys, filename):
+#             from models import db_session
+#             country_data = get_country_objects(filename)
+#             return Promise.resolve([self.session.add(country) for country in country_data])
 
-    class DayDataLoader(DataLoader):
-        def batch_load_fn(self, keys, filename):
-            day_data = get_day_data_objects(filename) 
-            return Promise.resolve([self.session.add(day) for day in day_data])
+#     class DayDataLoader(DataLoader):
+#         def batch_load_fn(self, keys, filename):
+#             day_data = get_day_data_objects(filename) 
+#             return Promise.resolve([self.session.add(day) for day in day_data])
 
-    def finalize(self):
-        self.session.commit()
-
-    
+#     def finalize(self):
+#         self.session.commit()
 
 
 def record_updates():
@@ -282,6 +358,274 @@ def record_updates():
     db_session.add(update) 
     db_session.commit()
 
+
+
+# -------------------------------------------- 
+
+def fetch_and_display_headers():
+    from pprint import pprint
+    headers = []
+    for f in os.listdir('CSSEGISandData'):
+        with open(f'CSSEGISandData/{f}', 'r') as readfile:
+            reader = csv.reader(readfile) 
+            for i, row in enumerate(reader):
+                if i > 0: break
+                if len(headers) > 0:
+                    if row == headers[-1]:
+                        break
+                headers.append(row) 
+        readfile.close()
+    pprint(headers)
+
+
+def test_header_locator():
+    from pprint import pprint
+    list_of_file_item_samples = []
+    relevent_header_index_set = 0
+
+    for f in os.listdir('CSSEGISandData'):
+        with open(f'CSSEGISandData/{f}', 'r') as readfile:
+            reader = csv.reader(readfile) 
+            for i, row in enumerate(reader):
+                if i > 1: break
+                if i == 0:
+                    for key in file_headers.keys():
+                        if row == file_headers[key]['headers']:
+                            relevent_header_index_set = key
+                            continue
+                
+                # print(row, file_headers[relevent_header_index_set]['index_array'].values())
+                try:
+                    values = [row[i] for i in file_headers[relevent_header_index_set]['index_array'].values()] 
+                except IndexError:
+                    break
+                list_of_file_item_samples.append(values) 
+        readfile.close()
+    pprint(list_of_file_item_samples)
+
+
+def sort_rows_by_country(filename, relevent_header_index):
+    rows = []
+    with open(filename, 'r') as readfile:
+        reader = csv.reader(readfile) 
+        # print(f'reader 0: {[row for row in reader][3]}')
+        rows = sorted([row for row in reader], key = lambda x: (x[file_headers[relevent_header_index]['index_array']['country']], x[file_headers[relevent_header_index]['index_array']['province']]) )
+        print(f'rows: {rows}')
+    readfile.close()  
+    return rows
+
+# def reformat_dates(filename):
+#     with open(filename, 'w') as writefile:
+#         writer
+
+def parse_and_compile_files():
+    writeable_content = []
+    relevent_header_index = 0
+    for f in os.listdir('CSSEGISandData'):
+        with open(f'CSSEGISandData/{f}', 'r') as readfile:
+            reader = csv.reader(readfile)
+            for i, row in enumerate(reader):
+                if i == 0: 
+                    for key in file_headers.keys():
+                        if file_headers[key]['headers'] == row:
+                            relevent_header_index = key 
+                            break 
+                    continue 
+                try:
+                    values = [row[i] for i in file_headers[relevent_header_index]['index_array'].values()]
+                except:
+                    pass
+                writeable_content.append(row) 
+        readfile.close()
+
+    # reformat faulty formatted dates
+    import re
+    date_reformatter = lambda x: x.insert( 4, datetime.datetime.strptime(x[4].split(' ')[0], '%m/%d/%y').strftime('%m-%d-%Y') ) if re.search("/", x[4].split(' ')[0]) is not None else x
+    writeable_content = map(date_reformatter, writeable_content)
+    print(f'writebale_content: {writeable_content}')
+    with open('CSSEGISandData/FinalData.csv', 'w', newline = '') as writefile:
+        writer = csv.writer(writefile) 
+        for row in writeable_content:
+            print(f'row in writable content: {row}')
+            try:
+                writer.writerow(row) 
+            except:
+                pass
+    writefile.close() 
+
+    sorted_final_data = sort_rows_by_country('CSSEGISandData/FinalData.csv', relevent_header_index) 
+    print(f'sorted files: {sorted_final_data}')
+    # open('CSSEGISandData/FinalData.csv', 'w').close()
+    with open('CSSEGISandData/FinalData.csv', 'w', newline = '') as writefile:
+        writer = csv.writer(writefile) 
+        for row in sorted_final_data:
+            writer.writerow(row) 
+    writefile.close()
+
+
+def update_from_latest_file():
+    import re
+    from models import db_session, Country, DayData
+    files = os.listdir('current_date_data') 
+    # last_country = session.query(Country).order_by(Country.id.desc()).first() 
+    # last_country_total_cases = last_country.total_cases
+    # last_country_total_deaths = last_country.total_deaths
+    with open(f'current_date_data/{files[0]}', 'r') as readfile:
+        reader = csv.reader(readfile) 
+        for i, row in enumerate(reader):
+            if i == 0: continue
+            if row[file_headers[6]['index_array']['country']] == 'US': continue
+            if row[file_headers[6]['index_array']['province']] != '': continue 
+
+            row[file_headers[6]['index_array']['country']] = '_'.join(row[file_headers[6]['index_array']['country']].split(' '))
+
+            
+
+            print(f'i: {i}')
+            print('name: {}'.format(row[file_headers[6]['index_array']['country']]))
+            # print('country_name: {}'.format(row[file_headers[6]['index_array']['country']]))
+            try:
+                relevent_country = db_session.query(Country).filter_by(name = row[file_headers[6]['index_array']['country']]).first()
+            except:
+                if len(relevent_country.name.split(' ')) > 1:
+                    for i, country_name_part in enumerate(relevent_country.name.split(' ')):
+                        try:
+                            relevent_country = db_session.query(Country).filter_by(name = row[file_headers[6]['index_array']['country']].split(' ')[i]).first()
+                            if relevent_country != None:
+                                break
+                        except:
+                            pass
+            if relevent_country is None: continue
+            # print(f'country_object: {dir(relevent_country)}')
+            last_country_total_cases = relevent_country.total_cases
+            last_country_total_deaths = relevent_country.total_deaths
+            print(f'last_country_total_cases: {last_country_total_cases}')
+            date = row[file_headers[6]['index_array']['last_update']].split(' ')[0]
+            # date = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('')
+            # print(f'list index out of range: {date_components}')
+
+            date_reformatter = lambda x: x.insert( 4, datetime.datetime.strptime(x[4].split(' ')[0], '%m/%d/%y').strftime('%m-%d-%Y') ) if re.search("/", x[4].split(' ')[0]) is not None else x
+            # writeable_content = map(date_reformatter, writeable_content)
+
+            from sqlalchemy import update
+            # country = Country(
+            #     name = row[file_headers[6]['index_array']['country']],
+            #     total_cases = int(last_country_total_cases) + int(row[file_headers[6]['index_array']['confirmed']]),
+            #     total_deaths = int(last_country_total_deaths) + int(row[file_headers[6]['index_array']['deaths']])
+            # )
+            update(Country).where(Country.name == relevent_country.name).\
+                values(
+                    name = row[file_headers[6]['index_array']['country']],
+                    total_cases = int(last_country_total_cases) + int(row[file_headers[6]['index_array']['confirmed']]),
+                    total_deaths = int(last_country_total_deaths) + int(row[file_headers[6]['index_array']['deaths']])
+                )
+
+            day_data = DayData(
+                country = relevent_country,
+                date = datetime.date(int(date.split('-')[0]), int(date.split('-')[1]), int(date.split('-')[2])),
+                new_cases = int(row[file_headers[6]['index_array']['confirmed']]),
+                new_deaths = int(row[file_headers[6]['index_array']['deaths']])
+            )
+            print(f'country: {relevent_country} \nday_data: {day_data}')
+            db_session.add(relevent_country) 
+            db_session.add(day_data) 
+            db_session.commit()
+    readfile.close()
+
+
+def alternatePullDownData(fetch_one = True):
+    def fetch_it(days: int, allow_fetching_error = False, allow_fetching_error_count: int = 2):
+        import re 
+
+        current_date: datetime.date = ''
+
+        if not allow_fetching_error:
+            current_date = date.today() - timedelta(days = days)
+            current_date = f'{current_date}'.split('-') 
+            current_date = '-'.join([current_date[1], current_date[2], current_date[0]])
+
+            request_url = f'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{current_date}.csv' 
+            r = requests.get(request_url, allow_redirects = True) 
+            # print(f'r.content: {r.content}')
+            byte_regex = re.compile(b'404')
+            if r.content == b'404: Not Found':
+                print(f'not found!!!!!!!!!!! \nCurrent date: {current_date}')
+                return ValueError
+            
+            # print(f'made it here: {r.content}')
+            open(f'current_date_data/{current_date}.csv', 'wb').write(r.content) 
+            return
+        else:
+            current_date = date.today() - timedelta(days = days + allow_fetching_error_count)
+            # print(f'current date: {str(current_date)}')
+            current_date = f'{current_date}'.split('-') 
+            current_date = '-'.join([current_date[1], current_date[2], current_date[0]])
+
+        request_url = f'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{current_date}.csv' 
+        r = requests.get(request_url, allow_redirects = True) 
+        print(f'r.content: {r.content}')
+        if re.search("404", str(r.content)):
+            if allow_fetching_error_count == 0:
+                return ValueError
+            else:
+                print(f'r.content: {r.content}')
+                allow_fetching_error_count -= 1 
+                fetch_it(days = days, allow_fetching_error_count=allow_fetching_error_count)
+        print(f'made it here: {r.content}')
+        open(f'CSSEGISandData/{current_date}.csv', 'wb').write(r.content) 
+
+    if not fetch_one:
+        fetching = True 
+        days = 0
+        while fetching:
+            try:
+                print('fetching_it')
+                fetch_it(days)
+                days += 1
+            except Exception as e:
+                print(f'failed for some reason: {e}')
+                fetching = False 
+    else:
+        # from models import session, DatabaseUpdate
+        # update = session.query(DatabaseUpdate).order_by(ObjectRes.id.desc()).first()  
+        # days = update.date - timedelta()
+        try:
+            fetch_it(1)
+        except ValueError:
+            fetch_it(1)
+        return
+
+    writeable_content = []
+    for f in os.listdir('CSSEGISandData'):
+        with open(f'CSSEGISandData/{f}', 'r') as readfile:
+            reader = csv.reader(readfile)
+            for row in reader:
+                writeable_content.append(row) 
+        readfile.close()
+    
+    with open('CSSEGISandData/FinalData.csv', 'w', newline = '') as writefile:
+        writer = csv.writer(writefile) 
+        for row in writeable_content:
+            writer.writerow(row) 
+    writefile.close() 
+
+    sorted_final_data = sort_rows_by_country('CSSEGISandData/FinalData.csv') 
+
+    open('CSSEGISandData/FinalData.csv', 'w').close()
+    with open('CSSEGISandData/FinalData.csv', 'w', newline = '') as writefile:
+        writer = csv.writer(writefile) 
+        for row in sorted_final_data:
+            writer.writerow(row) 
+    writefile.close() 
+
+
+# --------------------------------------------
+
+
+def update_one():
+    alternatePullDownData() 
+    print('PULLED DATA')
+    update_from_latest_file()
 
 
 def main():

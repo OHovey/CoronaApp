@@ -50,6 +50,8 @@ export default function Countries() {
 
     if (loading) return <p>Loading...</p>
 
+    if (data.allCountries.edges.length == 0) return <p>Could not retrieve data... probably updating, try again in a few seconds</p>
+
     data.allCountries.edges.sort(sortCountriesByInfectedCount)
 
     function sumCases(arr, key) {
@@ -87,10 +89,10 @@ export default function Countries() {
                 <div className = "col-md-3 mx-auto">
                 </div>
                 <div className = "col-md-3 align-middle">
-                    <p style = {{ fontSize: 28, color: 'whitesmoke' }} className = "text-center">Global Cases: <span style = {{ color: '#FF4136', fontSize: 35 }}>{totalCases}</span></p>
+                    <p style = {{ fontSize: 28, color: '#b0b0b0', fontWeight: 100 }} className = "text-center">Global Cases: <span style = {{ color: '#ff5757', fontSize: 35 }}>{totalCases.toLocaleString()}</span></p>
                 </div>
                 <div className = "col-md-3 mg-auto">
-                    <p style = {{ fontSize: 28, color: 'whitesmoke' }} className = "text-center">Global Deaths: <span style = {{ color: '#8c4f4f', fontSize: 35 }}>{totalDeaths}</span></p>
+                    <p style = {{ fontSize: 28, color: '#b0b0b0', fontWeight: 100 }} className = "text-center">Global Deaths: <span style = {{ color: '#943a3a', fontSize: 35 }}>{totalDeaths.toLocaleString()}</span></p>
                 </div>
                 <div className = "col-md-3 mx-auto">
                 </div>
@@ -104,7 +106,7 @@ export default function Countries() {
             </div> 
                 <div className = 'container-fluid'>
                     <table className = "table table-hover">
-                        <thead>
+                        <thead style = {{ color: '#474747' }}>
                             <tr>
                                 <th scope = "col">#</th> 
                                 <th scope = "col">Country</th> 
